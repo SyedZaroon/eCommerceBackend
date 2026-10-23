@@ -1,6 +1,7 @@
 import Product from "../models/productModel.js";
 import { convertToSlug } from "../utils/convertToSlug.js";
 import imagekit from "../utils/imagekit.js";
+import mongoose from "mongoose";
 
 const getCollectionIds = (body) => {
   const value = body["collections[]"] ?? body.collections;
@@ -93,15 +94,28 @@ export const getAllProducts = async (req, res) => {
 };
 
 // Get a product by ID
+
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const { id } = req.params;
+
+    const isObjectId = mongoose.Types.ObjectId.isValid(id);
+
+    const product = isObjectId
+      ? await Product.findById(id)
+      : await Product.findOne({ slug: id });
+
     if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+      return res.status(404).json({
+        message: "Product not found",
+      });
     }
-    res.status(200).json(product);
+
+    return res.status(200).json(product);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({
+      message: error.message,
+    });
   }
 };
 

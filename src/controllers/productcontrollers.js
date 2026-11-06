@@ -210,9 +210,6 @@ export const getAllProducts = async (req, res) => {
   }
 }
 
-<<<<<<< HEAD
-  // Get a product by ID
-=======
 // Get a product by ID
 
 export const getProductById = async (req, res) => {
@@ -238,7 +235,6 @@ export const getProductById = async (req, res) => {
     });
   }
 };
->>>>>>> origin/main
 
   export const getProductById = async (req, res) => {
     try {

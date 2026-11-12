@@ -22,7 +22,7 @@ export const createUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role,
+      role: role || "Customer",
       status: adminStatus || "Active",
     });
 

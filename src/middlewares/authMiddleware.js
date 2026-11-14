@@ -1,11 +1,11 @@
 import jwt from "jsonwebtoken";
-import Admin from "../models/adminModel.js";
+import User from "../models/userModel.js";
 import { PERMISSIONS } from "../config/roles.js"; 
 
 // 1. Active Status Check Middleware
 export const checkUserActive = async (req, res, next) => {
   try {
-    const user = await Admin.findById(req.user.userId);
+    const user = await User.findById(req.user.userId);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found." });
     }

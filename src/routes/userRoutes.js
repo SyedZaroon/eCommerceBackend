@@ -4,7 +4,7 @@ import {
   deleteUser,
   getAllUsers,
   updateUser,
-} from "../controllers/adminControllers.js";
+} from "../controllers/userControllers.js";
 import { authorizePermission, checkUserActive, verifyToken } from "../middlewares/authMiddleware.js";
 import { createRequire } from 'module';
 

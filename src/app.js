@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from 'cookie-parser';
-import adminUserRoutes from "./routes/adminUserRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import productCollectionRoutes from "./routes/productCollectionRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -23,7 +23,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 
-app.use("/api/admin/users", adminUserRoutes);
+app.use("/api/users", userRoutes);
 
 app.use("/api/products", productRoutes);
 

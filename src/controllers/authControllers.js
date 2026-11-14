@@ -1,4 +1,4 @@
-import Admin from "../models/adminModel.js";
+import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -6,7 +6,7 @@ export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await Admin.findOne({ email });
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -65,7 +65,7 @@ export const logoutUser = async (req, res) => {
 
 export const alreadylogedin = async (req, res) => {
   try {
-    const user = await Admin.findById(req.user.userId).select("-password");
+    const user = await User.findById(req.user.userId).select("-password");
 
     if (!user || user.status !== "Active") {
       return res.status(401).json({

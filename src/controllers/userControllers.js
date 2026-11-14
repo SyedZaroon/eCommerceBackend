@@ -1,4 +1,4 @@
-import Admin from "../models/adminModel.js";
+import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 
 export const createUser = async (req, res) => {
@@ -9,7 +9,7 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ message: "Please add all required fields" });
     }
 
-    const existingUser = await Admin.findOne({ email });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -18,7 +18,7 @@ export const createUser = async (req, res) => {
     const salt = await bcrypt.genSalt(saltRounds);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new Admin({
+    const newUser = new User({
       name,
       email,
       password: hashedPassword,
@@ -40,7 +40,7 @@ export const createUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await Admin.find().select("-password");
+    const users = await User.find().select("-password");
     res.status(200).json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -51,7 +51,7 @@ export const getAllUsers = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedUser = await Admin.findByIdAndDelete(id);
+    const deletedUser = await User.findByIdAndDelete(id);
 
     if (!deletedUser) {
       return res.status(404).json({ message: "User not found" });
@@ -69,7 +69,7 @@ export const updateUser = async (req, res) => {
     const { id } = req.params;
     const { name, email, role, status } = req.body;
 
-    const updatedUser = await Admin.findByIdAndUpdate(
+    const updatedUser = await User.findByIdAndUpdate(
       id,
       { name, email, role, status },
       { new: true, runValidators: true }

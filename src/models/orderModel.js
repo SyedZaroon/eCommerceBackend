@@ -1,80 +1,103 @@
 import mongoose from "mongoose";
 
+const paymentDetailsSchema = new mongoose.Schema(
+  {
+    transactionId: String,
+    gatewayReference: String,
+    gatewayResponse: {
+      eventId: String,
+      eventType: String,
+      responseCode: String,
+      paymentStatus: String,
+      currency: String,
+      amount: Number,
+    },
+    paidAt: Date,
+  },
+  { _id: false },
+);
+
 const orderSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "User", 
+      ref: "User",
+    },
+    userInfo: {
+      fullName: { type: String, required: true, trim: true },
+      email: { type: String, required: true, lowercase: true, trim: true },
+      phoneNumber: { type: String, required: true },
     },
     orderItems: [
       {
         product: {
           type: mongoose.Schema.Types.ObjectId,
           required: true,
-          ref: "Product", 
+          ref: "Product",
         },
-        title: { 
-          type: String, 
-          required: true 
-        },
-        qty: { 
-          type: Number, 
+        title: {
+          type: String,
           required: true,
-          min: 1 
         },
-        price: { 
-          type: Number, 
-          required: true 
+        qty: {
+          type: Number,
+          required: true,
+          min: 1,
         },
-        productImg: { 
-          type: String, 
-          required: true 
+        price: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        productImg: {
+          type: String,
+          required: true,
         },
       },
     ],
     shippingAddress: {
-      fullName: { type: String, required: true },
-      phone: { type: String, required: true },
+      postCode: { type: String, required: true },
       address: { type: String, required: true },
-      city: { type: String, required: true },
-      postalCode: { type: String, required: true },
+      additionalInfo: { type: String},
+      town: { type: String},
       country: { type: String, required: true, default: "Pakistan" },
     },
     paymentMethod: {
       type: String,
       required: true,
-      enum: ["COD", "Stripe", "JazzCash", "EasyPaisa"],
+      enum: ["COD", "JazzCash", "EasyPaisa"],
       default: "COD",
     },
-    paymentResult: {
-      id: { type: String },
-      status: { type: String },
-      update_time: { type: String },
-      email_address: { type: String },
+    paymentStatus: {
+      type: String,
+      required: true,
+      enum: ["Pending", "Paid", "Failed", "Refunded"],
+      default: "Pending",
     },
-    itemsPrice: { 
-      type: Number, 
-      required: true, 
-      default: 0.0 
+    paymentDetails: { type: paymentDetailsSchema, default: () => ({}) },
+    currency: {
+      type: String,
+      required: true,
+      uppercase: true,
+      default: "PKR",
     },
-    shippingPrice: { 
-      type: Number, 
-      required: true, 
-      default: 0.0 
+    itemsPrice: {
+      type: Number,
+      required: true,
+      default: 0.0,
+      min: 0,
     },
-    totalPrice: { 
-      type: Number, 
-      required: true, 
-      default: 0.0 
+    shippingPrice: {
+      type: Number,
+      required: true,
+      default: 0.0,
+      min: 0,
     },
-    isPaid: { 
-      type: Boolean, 
-      required: true, 
-      default: false 
-    },
-    paidAt: { 
-      type: Date 
+    totalPrice: {
+      type: Number,
+      required: true,
+      default: 0.0,
+      min: 0,
     },
     orderStatus: {
       type: String,
@@ -82,12 +105,19 @@ const orderSchema = new mongoose.Schema(
       enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
       default: "Pending",
     },
-    deliveredAt: { 
-      type: Date 
+    deliveredAt: {
+      type: Date,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
+
+orderSchema
+  .path("orderItems")
+  .validate(
+    (items) => Array.isArray(items) && items.length > 0,
+    "An order must contain at least one item.",
+  );
 
 const Order = mongoose.model("Order", orderSchema);
 

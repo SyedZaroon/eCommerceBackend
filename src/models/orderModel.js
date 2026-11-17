@@ -19,6 +19,11 @@ const paymentDetailsSchema = new mongoose.Schema(
 
 const orderSchema = new mongoose.Schema(
   {
+    orderNumber: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -58,8 +63,8 @@ const orderSchema = new mongoose.Schema(
     shippingAddress: {
       postCode: { type: String, required: true },
       address: { type: String, required: true },
-      additionalInfo: { type: String},
-      town: { type: String},
+      additionalInfo: { type: String },
+      town: { type: String },
       country: { type: String, required: true, default: "Pakistan" },
     },
     paymentMethod: {

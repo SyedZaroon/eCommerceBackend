@@ -119,7 +119,11 @@ export const addOrderItems = async (req, res) => {
     );
     const shippingPrice = getShippingPrice?.(itemsPrice);
 
+    const count = await Order.countDocuments();
+    const orderNumber = `ZA-${String(count + 1).padStart(4, '0')}`;
+
     const order = await Order.create({
+      orderNumber: orderNumber,
       user: account?._id,
       userInfo: { fullName: name, email, phoneNumber: phone },
       orderItems,

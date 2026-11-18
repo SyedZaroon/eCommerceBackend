@@ -19,4 +19,8 @@ export const PERMISSIONS = {
     UPDATE: ["Admin"],
     READ: ["Admin", "Manager"],
   },
+  ORDER: {
+    READ: ["Admin", "Manager"],
+    UPDATE: ["Admin", "Manager"],
+  },
 };

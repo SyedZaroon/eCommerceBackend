@@ -22,6 +22,23 @@ const getOrderIdentifierQuery = (identifier) => {
   return null;
 };
 
+const normalizeRefundedOrder = (order) => {
+  if (order.orderStatus !== "Cancelled" || order.paymentStatus !== "Refunded") {
+    return order;
+  }
+
+  const originalTotalPrice =
+    order.originalTotalPrice ??
+    (order.totalPrice || roundMoney((order.itemsPrice || 0) + (order.shippingPrice || 0)));
+  return {
+    ...order,
+    originalTotalPrice,
+    refundedAmount: order.refundedAmount || originalTotalPrice,
+    refundReason: order.refundReason || "Order canceled",
+    totalPrice: 0,
+  };
+};
+
 export const getAllOrders = async (req, res) => {
   try {
     const pageValue = req.query.page === undefined ? "1" : req.query.page;
@@ -113,13 +130,14 @@ export const getAllOrders = async (req, res) => {
         .populate("user", "name email")
         .lean(),
     ]);
+    const normalizedOrders = orders.map(normalizeRefundedOrder);
     const totalPages = Math.ceil(totalOrders / limit);
 
     return res.status(200).json({
       success: true,
       message: "Orders fetched successfully.",
       data: {
-        orders,
+        orders: normalizedOrders,
         pagination: {
           totalOrders,
           currentPage: page,
@@ -163,7 +181,7 @@ export const getOrderById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Order fetched successfully.",
-      data: order,
+      data: normalizeRefundedOrder(order),
     });
   } catch (error) {
     console.error("Error fetching order:", error);
@@ -220,6 +238,10 @@ export const updateOrder = async (req, res) => {
     if (body.paymentMethod !== undefined) order.paymentMethod = body.paymentMethod;
     if (body.paymentStatus !== undefined) order.paymentStatus = body.paymentStatus;
     if (body.orderStatus !== undefined) order.orderStatus = body.orderStatus;
+    if (body.orderStatus === "Cancelled" || body.paymentStatus === "Refunded") {
+      order.orderStatus = "Cancelled";
+      order.paymentStatus = "Refunded";
+    }
     if (body.shippingPrice !== undefined) order.shippingPrice = roundMoney(body.shippingPrice);
 
     if (body.orderItems !== undefined) {
@@ -275,6 +297,17 @@ export const updateOrder = async (req, res) => {
         order.orderItems.reduce((sum, item) => sum + item.price * item.qty, 0),
       );
       order.totalPrice = roundMoney(order.itemsPrice + order.shippingPrice);
+    }
+
+    if (order.orderStatus === "Cancelled" && order.paymentStatus === "Refunded") {
+      order.originalTotalPrice ??= order.totalPrice;
+      order.refundedAmount = order.originalTotalPrice;
+      order.refundReason ||= "Order canceled";
+      order.totalPrice = 0;
+    } else {
+      order.originalTotalPrice = order.totalPrice;
+      order.refundedAmount = 0;
+      order.refundReason = undefined;
     }
 
     await order.save();
@@ -428,6 +461,7 @@ export const addOrderItems = async (req, res) => {
       itemsPrice,
       shippingPrice,
       totalPrice: roundMoney(itemsPrice + shippingPrice),
+      originalTotalPrice: roundMoney(itemsPrice + shippingPrice),
     });
 
     return res.status(201).json({

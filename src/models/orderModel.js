@@ -104,6 +104,19 @@ const orderSchema = new mongoose.Schema(
       default: 0.0,
       min: 0,
     },
+    originalTotalPrice: {
+      type: Number,
+      min: 0,
+    },
+    refundedAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    refundReason: {
+      type: String,
+      trim: true,
+    },
     orderStatus: {
       type: String,
       required: true,

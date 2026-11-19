@@ -157,6 +157,99 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
+const getOrdersForUser = async (req, res, user) => {
+  const pageValue = req.query.page === undefined ? "1" : req.query.page;
+  const limitValue = req.query.limit === undefined ? "10" : req.query.limit;
+  const page = Number(pageValue);
+  const limit = Number(limitValue);
+  if (
+    typeof pageValue !== "string" ||
+    typeof limitValue !== "string" ||
+    !Number.isInteger(page) ||
+    page < 1 ||
+    !Number.isInteger(limit) ||
+    limit < 1 ||
+    limit > 100
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Page must be a positive integer and limit must be between 1 and 100.",
+    });
+  }
+
+  const filter = {
+    $or: [
+      { user: user._id },
+      { "userInfo.email": user.email.trim().toLowerCase() },
+    ],
+  };
+  const [totalOrders, orders] = await Promise.all([
+    Order.countDocuments(filter),
+    Order.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+  ]);
+  const totalPages = Math.ceil(totalOrders / limit);
+
+  return res.status(200).json({
+    success: true,
+    message: "User orders fetched successfully.",
+    data: {
+      orders: orders.map(normalizeRefundedOrder),
+      pagination: {
+        totalOrders,
+        currentPage: page,
+        totalPages,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    },
+  });
+};
+
+export const getMyOrders = async (req, res) => {
+  try {
+    return await getOrdersForUser(req, res, req.currentUser);
+  } catch (error) {
+    console.error("Error fetching customer orders:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch your orders.",
+    });
+  }
+};
+
+export const getOrdersByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!mongoose.isValidObjectId(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is invalid.",
+      });
+    }
+
+    const user = await User.findById(userId).select("_id email").lean();
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    return await getOrdersForUser(req, res, user);
+  } catch (error) {
+    console.error("Error fetching user orders:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch this user's orders.",
+    });
+  }
+};
+
 export const getOrderById = async (req, res) => {
   try {
     const identifierQuery = getOrderIdentifierQuery(req.params.id);
@@ -380,6 +473,12 @@ export const addOrderItems = async (req, res) => {
         message:
           "Customer name, email, and phone are required for guest checkout.",
       });
+    }
+
+    if (!account) {
+      account = await User.findOne({ email: email.trim().toLowerCase() })
+        .select("_id")
+        .lean();
     }
 
     const quantities = new Map();

@@ -7,13 +7,11 @@ import productCollectionRoutes from "./routes/productCollectionRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import { APPLICATIONS } from "./config/applications.js";
 
 export const app = express();
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-];
+const allowedOrigins = Object.values(APPLICATIONS).map(({ origin }) => origin);
 
 app.use(
   cors({
@@ -35,4 +33,3 @@ app.use("/api", authRoutes)
 
 app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes);
-

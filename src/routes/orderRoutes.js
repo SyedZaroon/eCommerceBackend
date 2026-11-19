@@ -3,16 +3,33 @@ import {
 	addOrderItems,
 	getAllOrders,
 	getOrderById,
+	getMyOrders,
+	getOrdersByUser,
 	updateOrder,
 } from "../controllers/orderController.js";
 import {
 	authorizePermission,
 	checkUserActive,
+	optionalVerifyToken,
 	verifyToken,
 } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
+router.get(
+	"/mine",
+	verifyToken,
+	checkUserActive,
+	authorizePermission("ORDER", "VIEW"),
+	getMyOrders,
+);
+router.get(
+	"/user/:userId",
+	verifyToken,
+	checkUserActive,
+	authorizePermission("ORDER", "READ"),
+	getOrdersByUser,
+);
 router.get(
 	"/",
 	verifyToken,
@@ -34,6 +51,6 @@ router.put(
 	authorizePermission("ORDER", "UPDATE"),
 	updateOrder,
 );
-router.post("/", addOrderItems);
+router.post("/", optionalVerifyToken, addOrderItems);
 
 export default router;

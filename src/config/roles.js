@@ -22,5 +22,6 @@ export const PERMISSIONS = {
   ORDER: {
     READ: ["Admin", "Manager"],
     UPDATE: ["Admin", "Manager"],
+    VIEW: ["Admin", "Manager", "Customer"],
   },
 };

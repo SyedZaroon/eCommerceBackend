@@ -9,6 +9,12 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ message: "Please add all required fields" });
     }
 
+    if (!["Admin", "Manager"].includes(role)) {
+      return res.status(400).json({
+        message: "The dashboard can create Admin or Manager accounts only.",
+      });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
@@ -22,7 +28,7 @@ export const createUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role || "Customer",
+      role,
       status: adminStatus || "Active",
     });
 
@@ -69,6 +75,12 @@ export const updateUser = async (req, res) => {
     const { id } = req.params;
     const { name, email, role, status } = req.body;
 
+    if (role !== undefined && !["Admin", "Manager"].includes(role)) {
+      return res.status(400).json({
+        message: "The dashboard can assign Admin or Manager roles only.",
+      });
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       id,
       { name, email, role, status },
@@ -85,4 +97,3 @@ export const updateUser = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-

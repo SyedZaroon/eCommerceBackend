@@ -98,6 +98,12 @@ const orderSchema = new mongoose.Schema(
       default: 0.0,
       min: 0,
     },
+    shippingMethod: {
+      type: String,
+      enum: ["standard", "next_day"],
+      default: "standard",
+      required: true,
+    },
     totalPrice: {
       type: Number,
       required: true,

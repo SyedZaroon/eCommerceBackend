@@ -8,6 +8,8 @@ export const shippingAddressSchema = z.object({
   country: z.string().trim().min(2).max(100).default("Pakistan"),
 });
 
+export const shippingMethodSchema = z.enum(["standard", "next_day"]);
+
 export const createOrderSchema = z.object({
   orderItems: z
     .array(
@@ -26,6 +28,7 @@ export const createOrderSchema = z.object({
     })
     .optional(),
   shippingAddress: shippingAddressSchema,
+  shippingMethod: shippingMethodSchema.default("standard"),
   paymentMethod: z.enum(["COD", "JazzCash", "EasyPaisa"]),
 });
 
@@ -73,6 +76,7 @@ export const updateOrderSchema = z
       "Cancelled",
     ]),
     shippingPrice: z.number().finite().min(0),
+    shippingMethod: shippingMethodSchema,
   })
   .partial()
   .strict()

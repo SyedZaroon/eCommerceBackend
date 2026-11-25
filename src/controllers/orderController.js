@@ -8,7 +8,10 @@ import {
 } from "../services/zodValidation.js";
 import { roundMoney } from "../utils/roundMoney.js";
 import { getCurrency } from "../utils/getCurrency.js";
-import { getShippingPrice } from "../utils/getShippingPrice.js";
+import {
+  getShippingPrice,
+  SHIPPING_METHODS,
+} from "../utils/getShippingPrice.js";
 import { sendMail } from "../services/sendMail.js";
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -251,6 +254,53 @@ export const getOrdersByUser = async (req, res) => {
   }
 };
 
+export const getShippingOptions = async (req, res) => {
+  const { itemsPrice } = req.query;
+  const subtotal = Number(itemsPrice);
+  if (
+    typeof itemsPrice !== "string" ||
+    itemsPrice.trim() === "" ||
+    !Number.isFinite(subtotal) ||
+    subtotal < 0
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "A non-negative order subtotal is required.",
+    });
+  }
+
+  try {
+    const standardPrice = getShippingPrice(
+      subtotal,
+      SHIPPING_METHODS.STANDARD,
+    );
+    return res.status(200).json({
+      success: true,
+      data: {
+        currency: getCurrency(),
+        options: [
+          {
+            method: SHIPPING_METHODS.STANDARD,
+            label: standardPrice === 0 ? "Free Shipping" : "Standard Delivery",
+            price: standardPrice,
+          },
+          {
+            method: SHIPPING_METHODS.NEXT_DAY,
+            label: "Next Day Delivery",
+            price: getShippingPrice(subtotal, SHIPPING_METHODS.NEXT_DAY),
+          },
+        ],
+      },
+    });
+  } catch (error) {
+    console.error("Error getting shipping options:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to get shipping options.",
+    });
+  }
+};
+
 export const getOrderById = async (req, res) => {
   try {
     const identifierQuery = getOrderIdentifierQuery(req.params.id);
@@ -336,8 +386,6 @@ export const updateOrder = async (req, res) => {
       order.orderStatus = "Cancelled";
       order.paymentStatus = "Refunded";
     }
-    if (body.shippingPrice !== undefined) order.shippingPrice = roundMoney(body.shippingPrice);
-
     if (body.orderItems !== undefined) {
       const quantities = new Map();
       for (const item of body.orderItems) {
@@ -386,10 +434,32 @@ export const updateOrder = async (req, res) => {
       order.orderItems = orderItems;
     }
 
-    if (body.orderItems !== undefined || body.shippingPrice !== undefined) {
+    if (body.orderItems !== undefined) {
       order.itemsPrice = roundMoney(
         order.orderItems.reduce((sum, item) => sum + item.price * item.qty, 0),
       );
+    }
+
+    if (body.shippingMethod !== undefined) {
+      order.shippingMethod = body.shippingMethod;
+      order.shippingPrice = getShippingPrice(
+        order.itemsPrice,
+        order.shippingMethod,
+      );
+    } else if (body.shippingPrice !== undefined) {
+      order.shippingPrice = roundMoney(body.shippingPrice);
+    } else if (body.orderItems !== undefined) {
+      order.shippingPrice = getShippingPrice(
+        order.itemsPrice,
+        order.shippingMethod,
+      );
+    }
+
+    if (
+      body.orderItems !== undefined ||
+      body.shippingPrice !== undefined ||
+      body.shippingMethod !== undefined
+    ) {
       order.totalPrice = roundMoney(order.itemsPrice + order.shippingPrice);
     }
 
@@ -538,7 +608,8 @@ export const addOrderItems = async (req, res) => {
     const itemsPrice = roundMoney(
       orderItems.reduce((sum, item) => sum + item.price * item.qty, 0),
     );
-    const shippingPrice = getShippingPrice?.(itemsPrice);
+    const shippingMethod = body.shippingMethod;
+    const shippingPrice = getShippingPrice(itemsPrice, shippingMethod);
 
     const count = await Order.countDocuments();
     const orderNumber = `ZA-${String(count + 1).padStart(4, '0')}`;
@@ -556,6 +627,7 @@ export const addOrderItems = async (req, res) => {
         country: body.shippingAddress.country,
       },
       paymentMethod: body.paymentMethod,
+      shippingMethod,
       paymentStatus: "Pending",
       currency: getCurrency(),
       itemsPrice,
@@ -607,7 +679,12 @@ export const addOrderItems = async (req, res) => {
         country: order.shippingAddress.country,
       },
       paymentMethod: `${order.paymentMethod} (${order.paymentStatus})`,
-      shippingMethod: Number(order.shippingPrice) === 0 ? "Free Shipping" : "Standard Shipping",
+      shippingMethod:
+        order.shippingMethod === SHIPPING_METHODS.NEXT_DAY
+          ? "Next Day Delivery"
+          : Number(order.shippingPrice) === 0
+            ? "Free Shipping"
+            : "Standard Delivery",
       supportEmail: process.env.SUPPORT_EMAIL || process.env.EMAIL_USER,
       year: new Date().getFullYear(),
     };

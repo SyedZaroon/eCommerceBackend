@@ -1,5 +1,7 @@
 import crypto from "crypto";
 import Order from "../models/orderModel.js";
+import { getShippingPrice } from "../utils/getShippingPrice.js";
+import { shippingMethodSchema } from "../services/zodValidation.js";
 
 
 const generateJazzCashHash = (dataPayload, salt) => {
@@ -21,14 +23,32 @@ const generateJazzCashHash = (dataPayload, salt) => {
 
 const handleJazzCashPayment = async (orderData, res) => {
   try {
-    const { orderItems, shippingAddress, userInfo, totalPrice } = orderData;
+    const { orderItems, userInfo } = orderData;
+    const parsedShippingMethod = shippingMethodSchema.safeParse(
+      orderData.shippingMethod ?? "standard",
+    );
+    const itemsPrice = Number(orderData.itemsPrice ?? orderData.totalPrice);
 
-    if (!totalPrice || !userInfo?.phone || !userInfo?.email) {
+    if (
+      !Array.isArray(orderItems) ||
+      !Number.isFinite(itemsPrice) ||
+      itemsPrice <= 0 ||
+      !userInfo?.phone ||
+      !userInfo?.email
+    ) {
       return res.status(400).json({
         success: false,
         message: "Missing required order details for JazzCash.",
       });
     }
+    if (!parsedShippingMethod.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Shipping method is invalid.",
+      });
+    }
+    const totalPrice =
+      itemsPrice + getShippingPrice(itemsPrice, parsedShippingMethod.data);
 
     const txnRefNo = `T${Date.now()}`;
 

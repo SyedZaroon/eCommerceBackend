@@ -5,6 +5,7 @@ import {
 	getOrderById,
 	getMyOrders,
 	getOrdersByUser,
+	getShippingOptions,
 	updateOrder,
 } from "../controllers/orderController.js";
 import {
@@ -16,6 +17,7 @@ import {
 
 const router = express.Router();
 
+router.get("/shipping-options", getShippingOptions);
 router.get(
 	"/mine",
 	verifyToken,

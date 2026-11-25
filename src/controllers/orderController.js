@@ -9,6 +9,7 @@ import {
 import { roundMoney } from "../utils/roundMoney.js";
 import { getCurrency } from "../utils/getCurrency.js";
 import { getShippingPrice } from "../utils/getShippingPrice.js";
+import { sendMail } from "../services/sendMail.js";
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -561,6 +562,74 @@ export const addOrderItems = async (req, res) => {
       shippingPrice,
       totalPrice: roundMoney(itemsPrice + shippingPrice),
       originalTotalPrice: roundMoney(itemsPrice + shippingPrice),
+    });
+
+    // ... Order.create(...) ke baad:
+
+    const currencySymbol = order.currency === "GBP" ? "£" : `${order.currency} `;
+
+    const emailData = {
+      logoUrl: process.env.STORE_LOGO_URL || "",
+      orderNumber: order.orderNumber,
+      customerName: order.userInfo.fullName,
+      orderUrl: `${process.env.FRONTEND_URL || "http://localhost:5173"}/orders/${order._id}`,
+      storeUrl: process.env.FRONTEND_URL || "http://localhost:5173",
+      estimatedDelivery: "", // agar model mein ho to yahan pass karein
+      currency: currencySymbol,
+      currencyCode: order.currency || "",
+      items: order.orderItems.map((item) => ({
+        name: item.title,
+        variant: "", // agar variant field ho to pass karein
+        quantity: item.qty,
+        price: Number(item.price).toFixed(2),
+        image: item.productImg,
+      })),
+      subtotal: Number(order.itemsPrice).toFixed(2),
+      discount: "", // agar discount field ho to pass karein
+      discountCode: "",
+      shipping: Number(order.shippingPrice).toFixed(2),
+      taxes: "",
+      total: Number(order.totalPrice).toFixed(2),
+      shippingAddress: {
+        name: order.userInfo.fullName,
+        line1: order.shippingAddress.address,
+        line2: order.shippingAddress.additionalInfo || "",
+        city: order.shippingAddress.town,
+        postalCode: order.shippingAddress.postCode,
+        country: order.shippingAddress.country,
+      },
+      billingAddress: {
+        name: order.userInfo.fullName,
+        line1: order.shippingAddress.address,
+        line2: order.shippingAddress.additionalInfo || "",
+        city: order.shippingAddress.town,
+        postalCode: order.shippingAddress.postCode,
+        country: order.shippingAddress.country,
+      },
+      paymentMethod: `${order.paymentMethod} (${order.paymentStatus})`,
+      shippingMethod: Number(order.shippingPrice) === 0 ? "Free Shipping" : "Standard Shipping",
+      supportEmail: process.env.SUPPORT_EMAIL || process.env.EMAIL_USER,
+      year: new Date().getFullYear(),
+    };
+
+    try {
+      await sendMail({
+        to: order.userInfo.email,
+        subject: `Order Confirmation - ${order.orderNumber}`,
+        templateName: "order-confirmation.html",
+        data: emailData,
+      });
+    } catch (mailError) {
+      console.error(
+        `Failed to send order confirmation email for ${order.orderNumber}:`,
+        mailError.message,
+      );
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Cash-on-delivery order created. Payment is pending.",
+      order,
     });
 
     return res.status(201).json({

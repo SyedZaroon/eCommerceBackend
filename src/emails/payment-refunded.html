@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Refund Processed - {{orderNumber}}</title>
+</head>
+<body style="margin:0; padding:0; background-color:#F4F4F5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#18181B;">
+
+  <!-- Outer Wrapper -->
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#F4F4F5; padding: 24px 12px;">
+    <tr>
+      <td align="center">
+
+        <!-- Main Email Container (600px) -->
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%; max-width:600px; background-color:#FFFFFF; border-radius:8px; overflow:hidden; border:1px solid #E4E4E7;">
+
+          <!-- Top Dark Brand Header -->
+          <tr>
+            <td style="background-color:#0B0C0E; padding: 20px 28px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td align="left" style="vertical-align:middle;">
+                    {{#if logoUrl}}
+                      <img src="{{logoUrl}}" alt="Price First" width="135" style="display:block; border:0; max-width:135px; height:auto;" />
+                    {{else}}
+                      <span style="font-size:20px; font-weight:700; color:#E5C158; letter-spacing:-0.3px;">Price First</span>
+                    {{/if}}
+                  </td>
+                  <td align="right" style="vertical-align:middle;">
+                    <span style="font-size:12px; font-weight:600; color:#A1A1AA; letter-spacing:0.5px;">ORDER {{orderNumber}}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Warm Cream Hero Section -->
+          <tr>
+            <td style="background-color:#F5F0E1; padding: 28px; border-bottom:1px solid #E6DEC8;">
+              <div style="display:inline-block; background-color:#0B0C0E; color:#E5C158; font-size:11px; font-weight:700; padding:4px 10px; border-radius:4px; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:12px;">
+                Refund Issued
+              </div>
+              <h1 style="margin:0 0 8px 0; font-size:24px; font-weight:700; color:#18181B; line-height:1.3;">
+                Your refund has been processed, {{customerName}}
+              </h1>
+              <p style="margin:0 0 20px 0; font-size:14px; color:#52525B; line-height:1.5;">
+                We've issued a refund for order <strong style="color:#18181B;">{{orderNumber}}</strong>. Depending on your bank or payment provider, it may take <strong style="color:#18181B;">3–7 business days</strong> to appear on your statement.
+              </p>
+
+              <!-- Refund Amount Highlight Card -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#FFFFFF; border:1px solid #E6DEC8; border-radius:6px;">
+                <tr>
+                  <td style="padding:14px 16px;">
+                    <div style="font-size:11px; font-weight:600; color:#71717A; text-transform:uppercase; letter-spacing:0.4px;">
+                      Refunded Amount
+                    </div>
+                    <div style="font-size:20px; font-weight:700; color:#16A34A; margin-top:2px;">
+                      {{currency}}{{refundAmount}} {{currencyCode}}
+                    </div>
+                  </td>
+                  <td align="right" style="padding:14px 16px; vertical-align:middle;">
+                    <div style="font-size:11px; font-weight:600; color:#71717A; text-transform:uppercase; letter-spacing:0.4px;">
+                      Refunded To
+                    </div>
+                    <div style="font-size:13px; font-weight:600; color:#18181B; margin-top:2px;">
+                      {{paymentMethod}}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Refunded Items Section -->
+          {{#if items}}
+          <tr>
+            <td style="padding: 28px 28px 12px 28px;">
+              <h2 style="margin:0 0 6px 0; font-size:16px; font-weight:700; color:#18181B;">Refunded items</h2>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                {{#each items}}
+                <tr>
+                  <td style="padding: 14px 0; border-bottom:1px solid #F4F4F5; vertical-align:middle;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td width="64" style="vertical-align:top; padding-right:14px;">
+                          <img src="{{this.image}}" alt="{{this.name}}" width="56" height="56" style="display:block; width:56px; height:56px; object-fit:cover; border-radius:6px; border:1px solid #E4E4E7; background-color:#FAFAFA;" />
+                        </td>
+                        <td style="vertical-align:middle;">
+                          <div style="font-size:14px; font-weight:600; color:#18181B; line-height:1.4;">
+                            {{this.name}} &times; {{this.quantity}}
+                          </div>
+                          {{#if this.variant}}
+                          <div style="font-size:12px; color:#71717A; margin-top:2px;">
+                            {{this.variant}}
+                          </div>
+                          {{/if}}
+                        </td>
+                        <td align="right" style="vertical-align:middle; white-space:nowrap; padding-left:12px;">
+                          <span style="font-size:14px; font-weight:600; color:#18181B;">{{currency}}{{this.price}}</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                {{/each}}
+              </table>
+            </td>
+          </tr>
+          {{/if}}
+
+          <!-- Refund Breakdown -->
+          <tr>
+            <td style="padding: 12px 28px 24px 28px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td width="35%">&nbsp;</td>
+                  <td width="65%">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="font-size:13px; color:#52525B;">
+                      {{#if subtotal}}
+                      <tr>
+                        <td style="padding:5px 0;">Items Subtotal</td>
+                        <td align="right" style="padding:5px 0; font-weight:600; color:#18181B;">{{currency}}{{subtotal}}</td>
+                      </tr>
+                      {{/if}}
+                      {{#if shippingRefunded}}
+                      <tr>
+                        <td style="padding:5px 0;">Shipping Refunded</td>
+                        <td align="right" style="padding:5px 0; font-weight:600; color:#18181B;">{{currency}}{{shippingRefunded}}</td>
+                      </tr>
+                      {{/if}}
+                      {{#if taxesRefunded}}
+                      <tr>
+                        <td style="padding:5px 0;">Taxes Refunded</td>
+                        <td align="right" style="padding:5px 0; font-weight:600; color:#18181B;">{{currency}}{{taxesRefunded}}</td>
+                      </tr>
+                      {{/if}}
+                      <tr>
+                        <td colspan="2" style="padding-top:10px; border-bottom:1px solid #E4E4E7;"></td>
+                      </tr>
+                      <tr>
+                        <td style="padding-top:12px; font-size:15px; font-weight:700; color:#18181B;">Total Refunded</td>
+                        <td align="right" style="padding-top:12px; font-size:18px; font-weight:700; color:#16A34A;">{{currency}}{{refundAmount}} {{currencyCode}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 28px;">
+              <div style="height:1px; background-color:#E4E4E7;"></div>
+            </td>
+          </tr>
+
+          <!-- Transaction Metadata -->
+          <tr>
+            <td style="padding: 24px 28px;">
+              <h2 style="margin:0 0 12px 0; font-size:16px; font-weight:700; color:#18181B;">Refund details</h2>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="font-size:13px; line-height:1.6; color:#52525B;">
+                <tr>
+                  <td width="50%" style="vertical-align:top; padding-right:12px;">
+                    <div style="font-weight:700; color:#18181B; margin-bottom:2px;">Payment method</div>
+                    <div>{{paymentMethod}}</div>
+                    {{#if refundReason}}
+                    <div style="font-weight:700; color:#18181B; margin-top:10px; margin-bottom:2px;">Reason</div>
+                    <div>{{refundReason}}</div>
+                    {{/if}}
+                  </td>
+                  <td width="50%" style="vertical-align:top; padding-left:12px;">
+                    {{#if refundId}}
+                    <div style="font-weight:700; color:#18181B; margin-bottom:2px;">Refund reference ID</div>
+                    <div style="font-family:monospace;">{{refundId}}</div>
+                    {{/if}}
+                    {{#if refundDate}}
+                    <div style="font-weight:700; color:#18181B; margin-top:10px; margin-bottom:2px;">Date processed</div>
+                    <div>{{refundDate}}</div>
+                    {{/if}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#FAFAFA; padding: 20px 28px; border-top:1px solid #E4E4E7; text-align:center; font-size:12px; color:#71717A; line-height:1.5;">
+              If you have any questions, reply to this email or contact us at
+              <a href="mailto:{{supportEmail}}" style="color:#18181B; font-weight:600; text-decoration:underline;">{{supportEmail}}</a>.
+              <br />
+              &copy; {{year}} Price First. All rights reserved.
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

@@ -479,6 +479,22 @@ export const updateOrder = async (req, res) => {
       { path: "user", select: "name email" },
       { path: "orderItems.product", select: "title description sku productImg basePrice discountPrice" },
     ]);
+
+      if (order.orderStatus === "Cancelled"){
+   try {
+      await sendMail({
+        to: order.userInfo.email,
+        subject: `Order Cancelled - ${order.orderNumber}`,
+        templateName: "order-cancelled.html",
+        
+      });
+    } catch (mailError) {
+      console.error(
+        `Failed to send order confirmation email for ${order.orderNumber}:`,
+        mailError.message,
+      );
+    }
+  }
     return res.status(200).json({
       success: true,
       message: "Order updated successfully.",
@@ -491,6 +507,7 @@ export const updateOrder = async (req, res) => {
       message: "Unable to update order.",
     });
   }
+
 };
 
 export const addOrderItems = async (req, res) => {

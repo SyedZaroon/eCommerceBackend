@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Order Has Shipped - {{orderNumber}}</title>
+</head>
+<body style="margin:0; padding:0; background-color:#F4F4F5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#18181B;">
+
+  <!-- Outer Wrapper -->
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#F4F4F5; padding: 24px 12px;">
+    <tr>
+      <td align="center">
+
+        <!-- Main Email Container (600px) -->
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%; max-width:600px; background-color:#FFFFFF; border-radius:8px; overflow:hidden; border:1px solid #E4E4E7;">
+
+          <!-- Top Dark Brand Header -->
+          <tr>
+            <td style="background-color:#0B0C0E; padding: 20px 28px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td align="left" style="vertical-align:middle;">
+                    {{#if logoUrl}}
+                      <img src="{{logoUrl}}" alt="Price First" width="135" style="display:block; border:0; max-width:135px; height:auto;" />
+                    {{else}}
+                      <span style="font-size:20px; font-weight:700; color:#E5C158; letter-spacing:-0.3px;">Price First</span>
+                    {{/if}}
+                  </td>
+                  <td align="right" style="vertical-align:middle;">
+                    <span style="font-size:12px; font-weight:600; color:#A1A1AA; letter-spacing:0.5px;">ORDER {{orderNumber}}</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Warm Cream Hero Section -->
+          <tr>
+            <td style="background-color:#F5F0E1; padding: 28px; border-bottom:1px solid #E6DEC8;">
+              <div style="display:inline-block; background-color:#0B0C0E; color:#E5C158; font-size:11px; font-weight:700; padding:4px 10px; border-radius:4px; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:12px;">
+                On the way
+              </div>
+              <h1 style="margin:0 0 8px 0; font-size:24px; font-weight:700; color:#18181B; line-height:1.3;">
+                Your order is on the way, {{customerName}}!
+              </h1>
+              <p style="margin:0 0 20px 0; font-size:14px; color:#52525B; line-height:1.5;">
+                Great news! Your package has been handed over to our courier partner and is headed your way.
+              </p>
+
+              <!-- Tracking Box -->
+              {{#if trackingNumber}}
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#FFFFFF; border:1px solid #E6DEC8; border-radius:6px; margin-bottom:20px;">
+                <tr>
+                  <td style="padding:14px 16px;">
+                    <div style="font-size:11px; font-weight:600; color:#71717A; text-transform:uppercase; letter-spacing:0.4px;">
+                      {{#if carrier}}{{carrier}} {{/if}}Tracking Number
+                    </div>
+                    <div style="font-size:15px; font-weight:700; color:#18181B; margin-top:3px; font-family:monospace;">
+                      {{trackingNumber}}
+                    </div>
+                  </td>
+                  {{#if trackingUrl}}
+                  <td align="right" style="padding:14px 16px; vertical-align:middle;">
+                    <a href="{{trackingUrl}}" target="_blank" style="display:inline-block; background-color:#0B0C0E; color:#FFFFFF; font-size:13px; font-weight:600; text-decoration:none; padding:10px 18px; border-radius:6px;">
+                      Track Package
+                    </a>
+                  </td>
+                  {{/if}}
+                </tr>
+              </table>
+              {{/if}}
+
+              {{#if estimatedDelivery}}
+              <p style="margin:0; font-size:13px; color:#52525B;">
+                Estimated delivery: <strong style="color:#18181B;">{{estimatedDelivery}}</strong>
+              </p>
+              {{/if}}
+            </td>
+          </tr>
+
+          <!-- Shipped Items Section -->
+          <tr>
+            <td style="padding: 28px 28px 16px 28px;">
+              <h2 style="margin:0 0 6px 0; font-size:16px; font-weight:700; color:#18181B;">Items in this shipment</h2>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                {{#each items}}
+                <tr>
+                  <td style="padding: 14px 0; border-bottom:1px solid #F4F4F5; vertical-align:middle;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td width="64" style="vertical-align:top; padding-right:14px;">
+                          <img src="{{this.image}}" alt="{{this.name}}" width="56" height="56" style="display:block; width:56px; height:56px; object-fit:cover; border-radius:6px; border:1px solid #E4E4E7; background-color:#FAFAFA;" />
+                        </td>
+                        <td style="vertical-align:middle;">
+                          <div style="font-size:14px; font-weight:600; color:#18181B; line-height:1.4;">
+                            {{this.name}} &times; {{this.quantity}}
+                          </div>
+                          {{#if this.variant}}
+                          <div style="font-size:12px; color:#71717A; margin-top:2px;">
+                            {{this.variant}}
+                          </div>
+                          {{/if}}
+                        </td>
+                        <td align="right" style="vertical-align:middle; white-space:nowrap; padding-left:12px;">
+                          <span style="font-size:14px; font-weight:600; color:#18181B;">{{currency}}{{this.price}}</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                {{/each}}
+              </table>
+            </td>
+          </tr>
+
+          <!-- Shipping Details -->
+          <tr>
+            <td style="padding: 16px 28px 28px 28px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="font-size:13px; line-height:1.6; color:#52525B;">
+                <tr>
+                  <td width="50%" style="vertical-align:top; padding-right:12px;">
+                    <div style="font-weight:700; color:#18181B; margin-bottom:4px;">Shipping address</div>
+                    <div>{{shippingAddress.name}}</div>
+                    <div>{{shippingAddress.line1}}</div>
+                    {{#if shippingAddress.line2}}<div>{{shippingAddress.line2}}</div>{{/if}}
+                    <div>{{shippingAddress.city}}, {{shippingAddress.postalCode}}</div>
+                    <div>{{shippingAddress.country}}</div>
+                  </td>
+                  <td width="50%" style="vertical-align:top; padding-left:12px;">
+                    <div style="font-weight:700; color:#18181B; margin-bottom:4px;">Shipping method</div>
+                    <div>{{shippingMethod}}</div>
+                    {{#if carrier}}
+                    <div style="margin-top:8px; font-weight:700; color:#18181B;">Carrier</div>
+                    <div>{{carrier}}</div>
+                    {{/if}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#FAFAFA; padding: 20px 28px; border-top:1px solid #E4E4E7; text-align:center; font-size:12px; color:#71717A; line-height:1.5;">
+              If you have any questions, reply to this email or contact us at
+              <a href="mailto:{{supportEmail}}" style="color:#18181B; font-weight:600; text-decoration:underline;">{{supportEmail}}</a>.
+              <br />
+              &copy; {{year}} Price First. All rights reserved.
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

@@ -12,7 +12,7 @@ export const sendMail = async ({
   const html = await renderTemplate(templateName, data);
 
   const info = await transporter.sendMail({
-    from: `"${process.env.MAIL_FROM_NAME || "Store Support"}" <${process.env.EMAIL_USER}>`,
+    from: `"${process.env.MAIL_FROM_NAME || "Price First"}" <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html,

@@ -526,15 +526,6 @@ export const addOrderItems = async (req, res) => {
 
     const body = parsed.data;
 
-    // Online orders must not be accepted as paid until the selected gateway
-    // has been integrated and its server-side payment response is verified.
-    if (body.paymentMethod !== "COD") {
-      return res.status(503).json({
-        success: false,
-        message: `${body.paymentMethod} payment verification is not configured. No order was created.`,
-      });
-    }
-
     let account;
     if (req.user?.userId) {
       if (!mongoose.isValidObjectId(req.user.userId)) {
@@ -722,13 +713,9 @@ export const addOrderItems = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Cash-on-delivery order created. Payment is pending.",
-      order,
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "Cash-on-delivery order created. Payment is pending.",
+      message: body.paymentMethod === "COD"
+        ? "Cash-on-delivery order created. Payment is pending."
+        : "Order created. Payment is pending.",
       order,
     });
   } catch (error) {

@@ -70,7 +70,7 @@ const orderSchema = new mongoose.Schema(
     paymentMethod: {
       type: String,
       required: true,
-      enum: ["COD", "JazzCash", "EasyPaisa"],
+      enum: ["COD", "JazzCash", "EasyPaisa", "Stripe"],
       default: "COD",
     },
     paymentStatus: {

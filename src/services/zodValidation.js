@@ -29,7 +29,7 @@ export const createOrderSchema = z.object({
     .optional(),
   shippingAddress: shippingAddressSchema,
   shippingMethod: shippingMethodSchema.default("standard"),
-  paymentMethod: z.enum(["COD", "JazzCash", "EasyPaisa"]),
+  paymentMethod: z.enum(["COD", "JazzCash", "EasyPaisa", "Stripe"]),
 });
 
 export const updateOrderSchema = z
@@ -66,7 +66,7 @@ export const updateOrderSchema = z
       )
       .min(1)
       .max(50),
-    paymentMethod: z.enum(["COD", "JazzCash", "EasyPaisa"]),
+    paymentMethod: z.enum(["COD", "JazzCash", "EasyPaisa", "Stripe"]),
     paymentStatus: z.enum(["Pending", "Paid", "Failed", "Refunded"]),
     orderStatus: z.enum([
       "Pending",

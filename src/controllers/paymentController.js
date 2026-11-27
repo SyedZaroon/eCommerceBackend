@@ -1,129 +1,73 @@
-import crypto from "crypto";
-import Order from "../models/orderModel.js";
-import { getShippingPrice } from "../utils/getShippingPrice.js";
-import { shippingMethodSchema } from "../services/zodValidation.js";
+import Stripe from "stripe";
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-const generateJazzCashHash = (dataPayload, salt) => {
-  const sortedKeys = Object.keys(dataPayload).sort();
-  let hashString = salt;
-
-  sortedKeys.forEach((key) => {
-    if (dataPayload[key] !== "" && dataPayload[key] !== undefined) {
-      hashString += `&${dataPayload[key]}`;
-    }
-  });
-
-  return crypto
-    .createHmac("sha256", salt)
-    .update(hashString)
-    .digest("hex");
+const paymentHandlers = {
+  Stripe: handleStripePayment,
 };
 
-
-const handleJazzCashPayment = async (orderData, res) => {
-  try {
-    const { orderItems, userInfo } = orderData;
-    const parsedShippingMethod = shippingMethodSchema.safeParse(
-      orderData.shippingMethod ?? "standard",
-    );
-    const itemsPrice = Number(orderData.itemsPrice ?? orderData.totalPrice);
-
-    if (
-      !Array.isArray(orderItems) ||
-      !Number.isFinite(itemsPrice) ||
-      itemsPrice <= 0 ||
-      !userInfo?.phone ||
-      !userInfo?.email
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required order details for JazzCash.",
-      });
-    }
-    if (!parsedShippingMethod.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Shipping method is invalid.",
-      });
-    }
-    const totalPrice =
-      itemsPrice + getShippingPrice(itemsPrice, parsedShippingMethod.data);
-
-    const txnRefNo = `T${Date.now()}`;
-
-    // JazzCash Payload
-    const jazzCashPayload = {
-      pp_MerchantID: process.env.JAZZCASH_MERCHANT_ID,
-      pp_Password: process.env.JAZZCASH_PASSWORD,
-      pp_TxnRefNo: txnRefNo,
-      pp_Amount: Math.round(totalPrice * 100), // Amount paison mein
-      pp_NoOfItems: orderItems.length.toString(),
-      pp_Description: "E-Commerce Order Payment",
-      pp_TxnCurrency: "PKR",
-      pp_BillReference: "billRef",
-      pp_Language: "EN",
-      pp_CustomerEmail: userInfo.email,
-      pp_CustomerMobileNo: userInfo.phone,
-      pp_ResponseURL: `${process.env.FRONTEND_URL}/payment-success`,
-    };
-
-    // Hash generate karna
-    const secureHash = generateJazzCashHash(
-      jazzCashPayload,
-      process.env.JAZZCASH_SALT
-    );
-    jazzCashPayload.pp_SecureHash = secureHash;
-
-    return res.status(200).json({
-      success: true,
-      message: "JazzCash payment initialized successfully",
-      gatewayData: jazzCashPayload,
-      paymentUrl: process.env.JAZZCASH_API_URL,
-    });
-  } catch (error) {
-    console.error("JazzCash Error:", error);
-    return res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// 2. Main Unified Payment Controller (Switch-Case)
 export const initiatePayment = async (req, res) => {
   try {
-    const { paymentMethod, ...orderData } = req.body;
+    const { paymentMethod, itemsPrice, shippingPrice = 0 } = req.body;
 
     if (!paymentMethod) {
       return res.status(400).json({
         success: false,
-        message: "Payment method is required.",
+        message: "Payment method is required",
+      });
+    }
+    const totalAmount = Number(itemsPrice || 0) + Number(shippingPrice || 0);
+    if (!totalAmount || totalAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order amount",
       });
     }
 
-    switch (paymentMethod) {
-      case "COD":
-        return res.status(400).json({
-          success: false,
-          message: "Please use /api/orders endpoint for COD.",
-        });
-
-      case "JazzCash":
-        return handleJazzCashPayment(orderData, res);
-
-      // Future mein yahan EasyPaisa ya Stripe ka case add ho jayega
-      // case "EasyPaisa":
-      //   return handleEasyPaisaPayment(orderData, res);
-
-      default:
-        return res.status(400).json({
-          success: false,
-          message: `Unsupported payment method: ${paymentMethod}`,
-        });
+    const handler = paymentHandlers[paymentMethod];
+    if (!handler) {
+      return res.status(400).json({
+        success: false,
+        message: `Unsupported payment method: ${paymentMethod}`,
+      });
     }
+
+    return await handler(req, res, totalAmount);
   } catch (error) {
-    console.error("Payment initiation error:", error);
+    console.error("Initiate payment error:", error);
     return res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: error.message || "Failed to initiate payment",
     });
   }
 };
+
+
+async function handleStripePayment(req, res, totalAmount) {
+  const { userInfo } = req.body;
+
+  const session = await stripe.checkout.sessions.create({
+    allowed_payment_method_types: ["card"],
+    mode: "payment",
+    customer_email: userInfo?.email || undefined,
+    line_items: [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Store Order",
+          },
+          unit_amount: Math.round(totalAmount * 100),
+        },
+        quantity: 1,
+      },
+    ],
+    success_url: "http://localhost:3000/thankyou",
+    cancel_url: "http://localhost:3000/checkout",
+  });
+
+  return res.status(200).json({
+    success: true,
+    paymentUrl: session.url,
+  });
+}

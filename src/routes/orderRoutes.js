@@ -37,7 +37,7 @@ router.get(
 	verifyToken,
 	checkUserActive,
 	authorizePermission("ORDER", "READ"),
-	getAllOrders,
+	getAllOrders, 
 );
 router.get(
 	"/:id",

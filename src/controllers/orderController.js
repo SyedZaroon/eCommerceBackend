@@ -485,7 +485,7 @@ export const updateOrder = async (req, res) => {
       await sendMail({
         to: order.userInfo.email,
         subject: `Order Cancelled - ${order.orderNumber}`,
-        templateName: "order-cancelled.html",
+        templateName: "order-cancelled.html", 
         
       });
     } catch (mailError) {
